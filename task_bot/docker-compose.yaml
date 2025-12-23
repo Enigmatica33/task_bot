@@ -1,0 +1,84 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - task_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_broker
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - task_network
+
+  backend:
+    env_file:
+      - .env
+    build: .
+    container_name: backend_task
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py create_superuser &&
+             python manage.py runserver 0.0.0.0:8000"
+    networks:
+      - task_network
+    restart: unless-stopped
+
+  bot:
+      build:
+        context: .
+      container_name: task_bot
+      env_file: .env
+      depends_on:
+        db:
+          condition: service_healthy
+        redis:
+          condition: service_started
+      command: python -u -m bot.bot
+      networks:
+        - task_network
+      restart: unless-stopped
+
+  worker:
+      build: .
+      container_name: celery_worker
+      command: celery -A task_bot worker -l DEBUG
+      env_file: .env
+      depends_on:
+        - backend
+        - bot
+        - redis
+        - db
+      networks:
+        - task_network
+      restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  task_network:
+    driver: bridge
