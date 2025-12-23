@@ -11,6 +11,7 @@ class CategoryAdmin(admin.ModelAdmin):
 class TaskAdmin(admin.ModelAdmin):
     model = Task
     list_display = (
+        "id",
         "title",
         "description",
         "created_at",

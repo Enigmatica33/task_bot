@@ -31,7 +31,7 @@ async def get_categories(telegram_user_id: int) -> Optional[List[Dict]]:
                 )
                 return None
     except aiohttp.ClientError as e:
-        logging.error(f"Ошибка клиента AIOHTTP при получении категорий: {e}")
+        logging.error(f"Ошибка при получении категорий: {e}")
         return None
 
 
@@ -40,7 +40,7 @@ async def get_tasks(telegram_user_id: int) -> Optional[List[Dict]]:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                f"{BASE_URL}tasks/", params={"user": telegram_user_id}
+                f"{BASE_URL}tasks/", params={"owner_tg_id": telegram_user_id}
             ) as response:
                 if response.status == status.HTTP_200_OK:
                     return await response.json()
@@ -59,7 +59,7 @@ async def get_tasks(telegram_user_id: int) -> Optional[List[Dict]]:
 async def get_task_by_id(task_id: int, user_id: int) -> Optional[Dict]:
     """Получает задачу по её ID."""
     try:
-        params = {"user_id": user_id}
+        params = {"owner_tg_id": user_id}
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 f"{BASE_URL}tasks/{task_id}/",
@@ -131,21 +131,24 @@ async def add_task(
         return False
 
 
-async def delete_task(task_id: int) -> bool:
+async def delete_task(task_id: int, user_id: int) -> bool:
     """
     Удаляет задачу по её ID.
     """
     try:
+        params = {"owner_tg_id": user_id}
         async with aiohttp.ClientSession() as session:
             async with session.delete(
-                f"{BASE_URL}tasks/{task_id}/"
+                f"{BASE_URL}tasks/{task_id}/",
+                params=params
             ) as response:
                 if response.status == status.HTTP_204_NO_CONTENT:
                     logging.info(f"Задача {task_id} успешно удалена.")
                     return True
                 elif response.status == status.HTTP_404_NOT_FOUND:
                     logging.warning(
-                        f"Не удалось удалить задачу {task_id}: " "не найдена."
+                        f"Не удалось удалить задачу {task_id}: "
+                        "не найдена."
                     )
                 else:
                     logging.error(
@@ -165,9 +168,12 @@ async def complete_task(user_id: int, task_id: int) -> bool:
     """
     payload = {"completed": True}
     try:
+        params = {"owner_tg_id": user_id}
         async with aiohttp.ClientSession() as session:
             async with session.patch(
-                f"{BASE_URL}tasks/{task_id}/", json=payload
+                f"{BASE_URL}tasks/{task_id}/",
+                json=payload,
+                params=params
             ) as response:
                 if response.status == status.HTTP_200_OK:
                     logging.info(

@@ -125,7 +125,8 @@ async def on_delete_clicked(
     Обрабатывает нажатие на кнопку удаления задачи.
     """
     task_id = manager.dialog_data.get("task_id")
-    await delete_task(task_id=task_id)
+    user_id = manager.event.from_user.id
+    await delete_task(task_id=task_id, user_id=user_id)
     await callback.answer("Задача успешно удалена!")
     await manager.switch_to(MainMenu.view_tasks)
 

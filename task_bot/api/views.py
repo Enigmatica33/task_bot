@@ -9,11 +9,12 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Фильтрует задачи по telegram_id пользователя.
+        Фильтрует задачи на основе параметра 'owner_tg_id',
+        переданного в URL.
         """
-        user_tg_id = self.request.query_params.get('user')
-        if user_tg_id:
-            return Task.objects.filter(user__telegram_id=user_tg_id)
+        telegram_id = self.request.query_params.get('owner_tg_id')
+        if telegram_id:
+            return Task.objects.filter(user__telegram_id=telegram_id)
         return Task.objects.none()
 
 

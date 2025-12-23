@@ -3,7 +3,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-pl9e3^j=+p)29a$f7fc!+rwlp8^9hcnlyghk7hexpnt-fvgm$n"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = True
 
@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    # 'rest_framework.authtoken',
     "api.apps.ApiConfig",
     "bot.apps.BotConfig",
 ]
@@ -108,8 +109,15 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = "static/"
-
-
 CELERY_BROCKER_URL = os.getenv("REDIS_URL")
 CELERY_RESULT_BACKEND = os.getenv("REDIS_URL")
+
+
+# REST_FRAMEWORK = {
+#         'DEFAULT_AUTHENTICATION_CLASSES': [
+#             'rest_framework.authentication.TokenAuthentication',
+#         ],
+#         'DEFAULT_PERMISSION_CLASSES': [
+#             'rest_framework.permissions.IsAuthenticated',
+#         ],
+#     }
