@@ -5,9 +5,16 @@ from bot.models import Category, Task, User
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_queryset(self):
+        """
+        Фильтрует задачи по telegram_id пользователя.
+        """
+        user_tg_id = self.request.query_params.get('user')
+        if user_tg_id:
+            return Task.objects.filter(user__telegram_id=user_tg_id)
+        return Task.objects.none()
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

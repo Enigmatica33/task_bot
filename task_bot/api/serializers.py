@@ -36,7 +36,10 @@ class TaskSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tg_id = validated_data.pop("owner_tg_id")
         categories = validated_data.pop("category")
-        user, created = User.objects.get_or_create(telegram_id=tg_id)
+        user, created = User.objects.get_or_create(
+            telegram_id=tg_id,
+            defaults={'username': str(tg_id)}
+        )
         task = Task.objects.create(user=user, **validated_data)
         task.category.set(categories)
         return task

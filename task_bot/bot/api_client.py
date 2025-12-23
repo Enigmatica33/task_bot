@@ -59,8 +59,12 @@ async def get_tasks(telegram_user_id: int) -> Optional[List[Dict]]:
 async def get_task_by_id(task_id: int, user_id: int) -> Optional[Dict]:
     """Получает задачу по её ID."""
     try:
+        params = {"user_id": user_id}
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{BASE_URL}tasks/{task_id}/") as response:
+            async with session.get(
+                f"{BASE_URL}tasks/{task_id}/",
+                params=params
+            ) as response:
                 if response.status == status.HTTP_200_OK:
                     return await response.json()
                 elif response.status == status.HTTP_404_NOT_FOUND:
@@ -93,7 +97,15 @@ async def add_task(
     if description:
         payload["description"] = description
     if due_date:
-        payload["due_date"] = due_date.isoformat()
+        if isinstance(due_date, str):
+            try:
+                actual_date = date.fromisoformat(due_date)
+            except ValueError:
+                logging.error(f"Неверный формат даты в строке: {due_date}")
+                return False
+        else:
+            actual_date = due_date
+        payload["due_date"] = actual_date.isoformat()
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -115,7 +127,7 @@ async def add_task(
                     )
                 return False
     except aiohttp.ClientError as e:
-        logging.error(f"Ошибка клиента AIOHTTP при добавлении задачи: {e}")
+        logging.error(f"Ошибка при добавлении задачи: {e}")
         return False
 
 
