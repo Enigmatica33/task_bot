@@ -32,10 +32,6 @@ docker compose logs -f
 docker compose down
 ```
 
-**Ожидаемый результат:**
-- PostgreSQL: контейнер `cadastrals_postgres` в состоянии `Up (healthy)`
-- Приложение: контейнер `cadastrals_app` в состоянии `Up (Started)`
-
 ### 4. Доступ к сервисам:
 
 - **Админ-панель Django**: http://127.1.0.0:8000/admin
